@@ -1,3 +1,4 @@
+import os
 import time
 from typing import TYPE_CHECKING
 from uvault.forge import Forge
@@ -9,6 +10,21 @@ if TYPE_CHECKING:
     from uvault.status import PackageStatus
 
 
+#: Environment variables consulted for a token, in order, when the user
+#: config does not define one. These are the names the GitHub CLI and
+#: GitHub Actions already set, so CI and a shell with `gh` logged in work
+#: without writing a token to disk.
+_TOKEN_ENV_VARS = ("GH_TOKEN", "GITHUB_TOKEN")
+
+
+def _token_from_env() -> str | None:
+    for name in _TOKEN_ENV_VARS:
+        value = os.environ.get(name)
+        if value:
+            return value
+    return None
+
+
 class GitHubForge(Forge):
     _clients = {}
 
@@ -18,7 +34,7 @@ class GitHubForge(Forge):
             return cls._clients[allow_anonymous]
 
         user_config = read_user_config()
-        token = user_config.get("github", {}).get("token")
+        token = user_config.get("github", {}).get("token") or _token_from_env()
         try:
             from github import Github, Auth  # type: ignore
 
@@ -29,7 +45,9 @@ class GitHubForge(Forge):
                 return client
             elif allow_anonymous:
                 print(
-                    "WARNING: No GitHub token configured in ~/.config/uvault/config.toml.\n"
+                    "WARNING: No GitHub token found in "
+                    "~/.config/uvault/config.toml or "
+                    f"{' / '.join(_TOKEN_ENV_VARS)}.\n"
                     "Using unauthenticated access. You may hit rate limits."
                 )
                 client = Github()
