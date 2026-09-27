@@ -167,11 +167,11 @@ class StatusCommand:
         for res in results:
             color = self._get_status_color(res.status)
             labels_str = f", labels: {','.join(res.labels)}" if res.labels else ""
-            diverged_str = " (Force-Push detecté!)" if res.diverged else ""
+            diverged_str = " (force-push detected!)" if res.diverged else ""
             behind_str = (
                 f", +{res.behind} commits{diverged_str}"
                 if res.behind or res.diverged
-                else ", à jour"
+                else ", up to date"
             )
             pkg_name = (
                 res.name
@@ -189,20 +189,18 @@ class StatusCommand:
                 print()
             print(f"📦 {res.name} ({res.source_url})")
             print(f"   ├─ Type   : {res.ref_type} {res.ref_value}")
-            print(f"   ├─ Statut : {color} {res.status}")
+            print(f"   ├─ Status : {color} {res.status}")
 
             if res.diverged:
-                behind_str = f"⚠️ {res.behind} nouveaux commits (Force-Push detecté!)"
+                behind_str = f"⚠️ {res.behind} new commits (force-push detected!)"
             elif res.behind:
-                behind_str = f"⚠️ {res.behind} nouveaux commits distants"
+                behind_str = f"⚠️ {res.behind} new remote commits"
             else:
-                behind_str = "à jour"
+                behind_str = "up to date"
 
             date_str = self._format_date(res.last_activity)
             labels_str = f" | labels: {','.join(res.labels)}" if res.labels else ""
-            print(
-                f"   └─ Update : {behind_str} (dernière activité {date_str}){labels_str}"
-            )
+            print(f"   └─ Update : {behind_str} (last activity {date_str}){labels_str}")
 
     def _print_table(self, results: list[PackageStatus]):
         print(
@@ -236,16 +234,16 @@ class StatusCommand:
 
     def _format_date(self, dt: datetime.datetime | None) -> str:
         if not dt:
-            return "inconnue"
+            return "unknown"
         now = datetime.datetime.now(datetime.timezone.utc)
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=datetime.timezone.utc)
 
         diff = now - dt
         if diff.days > 365:
-            return f"il y a {diff.days // 365} an(s)"
+            return f"{diff.days // 365} year(s) ago"
         if diff.days > 30:
-            return f"il y a {diff.days // 30} mois"
+            return f"{diff.days // 30} month(s) ago"
         if diff.days > 0:
-            return f"il y a {diff.days} jour(s)"
-        return "aujourd'hui"
+            return f"{diff.days} day(s) ago"
+        return "today"
