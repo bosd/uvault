@@ -48,7 +48,7 @@ class PyProject:
         current = self.doc
         for part in path_parts:
             if part not in current:
-                current.add(part, tomlkit.table())
+                current[part] = tomlkit.table()
             current = current[part]
         return current
 
