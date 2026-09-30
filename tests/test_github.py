@@ -170,3 +170,57 @@ def test_get_github_client_cached(
     assert client1 is not None
     assert client1 is client2
     mock_github_class.assert_called_once()
+
+
+@requires_github
+@patch("uvault.github.read_user_config", return_value={})
+@patch("github.Github")
+def test_token_read_from_gh_token_env(
+    mock_github_class, mock_read_user_config, monkeypatch
+):
+    """CI and a `gh`-logged-in shell already export this; no file needed."""
+    monkeypatch.setenv("GH_TOKEN", "env-token")
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+
+    GitHubForge._get_client()
+
+    from github import Auth  # type: ignore
+
+    assert mock_github_class.call_args is not None
+    auth = mock_github_class.call_args.kwargs.get("auth")
+    assert isinstance(auth, Auth.Token)
+    assert auth.token == "env-token"
+
+
+@requires_github
+@patch("uvault.github.read_user_config", return_value={})
+@patch("github.Github")
+def test_github_token_env_is_a_fallback(
+    mock_github_class, mock_read_user_config, monkeypatch
+):
+    """GITHUB_TOKEN is what Actions injects by default."""
+    monkeypatch.delenv("GH_TOKEN", raising=False)
+    monkeypatch.setenv("GITHUB_TOKEN", "actions-token")
+
+    GitHubForge._get_client()
+
+    auth = mock_github_class.call_args.kwargs.get("auth")
+    assert auth.token == "actions-token"
+
+
+@requires_github
+@patch(
+    "uvault.github.read_user_config",
+    return_value={"github": {"token": "file-token"}},
+)
+@patch("github.Github")
+def test_user_config_token_wins_over_env(
+    mock_github_class, mock_read_user_config, monkeypatch
+):
+    """An explicit config entry must not be silently overridden by the shell."""
+    monkeypatch.setenv("GH_TOKEN", "env-token")
+
+    GitHubForge._get_client()
+
+    auth = mock_github_class.call_args.kwargs.get("auth")
+    assert auth.token == "file-token"

@@ -107,6 +107,12 @@ token = "ghp_YOUR_GITHUB_TOKEN"
 ```
 
 * Remotes will be automatically added to the repository when running `uvault develop`.
+If you prefer not to write a token to disk, `uvault` also reads it from the
+`GH_TOKEN` or `GITHUB_TOKEN` environment variables (in that order). These are
+the names the GitHub CLI and GitHub Actions already set, so a `gh`-authenticated
+shell and CI both work with no configuration file. A token in
+`~/.config/uvault/config.toml` takes precedence over the environment.
+
 * The github token is used for automatically forking repositories when running `uvault sync`. For this to work, you need to have the `pygithub` optional dependency installed (e.g., `uv pip install uvault[github]`). In GitHub the token needs `fork` permissions.
 
 ## CLI Commands
