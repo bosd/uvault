@@ -8,17 +8,17 @@ from datetime import datetime, timezone, timedelta
 def test_status_format_date():
     cmd = StatusCommand(None, "list", "name")
 
-    assert cmd._format_date(None) == "inconnue"
+    assert cmd._format_date(None) == "unknown"
 
     now = datetime.now(timezone.utc)
-    assert cmd._format_date(now) == "aujourd'hui"
+    assert cmd._format_date(now) == "today"
 
     naive_now = datetime.now()
-    assert cmd._format_date(naive_now) == "aujourd'hui"
+    assert cmd._format_date(naive_now) == "today"
 
-    assert cmd._format_date(now - timedelta(days=2)) == "il y a 2 jour(s)"
-    assert cmd._format_date(now - timedelta(days=45)) == "il y a 1 mois"
-    assert cmd._format_date(now - timedelta(days=400)) == "il y a 1 an(s)"
+    assert cmd._format_date(now - timedelta(days=2)) == "2 day(s) ago"
+    assert cmd._format_date(now - timedelta(days=45)) == "1 month(s) ago"
+    assert cmd._format_date(now - timedelta(days=400)) == "1 year(s) ago"
 
 
 def test_status_get_color():
@@ -250,7 +250,7 @@ def test_status_behind(mock_pyproject, mock_get_client, capsys):
         cmd = StatusCommand(packages=None, format_type="list", sort_by="name")
         cmd.run()
         captured = capsys.readouterr()
-        assert "5 nouveaux commits" in captured.out
+        assert "5 new commits" in captured.out
 
         # Reset side effect since it consumed the iterator
         mock_check.side_effect = [
@@ -311,7 +311,7 @@ def test_status_behind(mock_pyproject, mock_get_client, capsys):
         cmd = StatusCommand(packages=None, format_type="inline", sort_by="name")
         cmd.run()
         captured = capsys.readouterr()
-        assert "+5 commits (Force-Push detecté!)" in captured.out
+        assert "+5 commits (force-push detected!)" in captured.out
 
 
 @patch("uvault.github.GitHubForge._get_client")
@@ -346,7 +346,7 @@ def test_status_compare_diverged(mock_pyproject, mock_get_client, capsys):
     cmd = StatusCommand(packages=None, format_type="list", sort_by="name")
     assert cmd.run() == 0
     captured = capsys.readouterr()
-    assert "Force-Push detecté!" in captured.out
+    assert "force-push detected!" in captured.out
 
 
 @patch("uvault.github.GitHubForge._get_client")
