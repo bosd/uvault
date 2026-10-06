@@ -152,10 +152,20 @@ class GitHubForge(Forge):
             "target": "tag",
             "enforcement": "active",
             "conditions": {"ref_name": {"include": ["~ALL"], "exclude": []}},
-            # `deletion` and `non_fast_forward` only. A `creation` rule is the
-            # obvious third one and it would break every later sync, because
-            # the vault has to keep accepting new tags.
-            "rules": [{"type": "deletion"}, {"type": "non_fast_forward"}],
+            # `update` as well as `non_fast_forward`: the latter alone still
+            # permits force-pushing an existing tag, so both are needed for a
+            # tag to actually be immutable.
+            #
+            # `creation` is deliberately absent. It is the obvious fourth rule
+            # and it would break every later sync, because the vault has to
+            # keep accepting new tags. Blocking `update` costs nothing by
+            # comparison: uvault pushes `<sha>:refs/tags/<tag>` with no `+`
+            # and no `--force`, so it never moves a tag that already exists.
+            "rules": [
+                {"type": "deletion"},
+                {"type": "non_fast_forward"},
+                {"type": "update"},
+            ],
         }
 
         try:

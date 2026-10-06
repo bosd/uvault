@@ -247,8 +247,11 @@ def test_ensure_tag_ruleset_creates_it(mock_github_class, mock_read_user_config)
     assert payload["target"] == "tag"
     assert payload["enforcement"] == "active"
     types = {r["type"] for r in payload["rules"]}
+    # `non_fast_forward` alone still allows force-pushing an existing tag, so
+    # `update` is required too for the tag to really be immutable.
     # `creation` must never be blocked: the vault has to keep accepting tags.
-    assert types == {"deletion", "non_fast_forward"}
+    assert types == {"deletion", "non_fast_forward", "update"}
+    assert "creation" not in types
 
 
 @requires_github
